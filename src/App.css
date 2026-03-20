@@ -391,6 +391,39 @@ input[type="range"] {
   gap: 10px;
 }
 
+/* Filename input */
+.filename-row {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface);
+  transition: border-color 0.15s;
+}
+
+.filename-row:focus-within {
+  border-color: var(--primary);
+}
+
+.filename-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 10px 12px;
+  font-size: 14px;
+  background: transparent;
+  color: var(--text);
+  min-width: 0;
+}
+
+.filename-ext {
+  padding: 10px 12px 10px 0;
+  font-size: 14px;
+  color: var(--text-muted);
+  user-select: none;
+}
+
 .btn-full {
   width: 100%;
 }

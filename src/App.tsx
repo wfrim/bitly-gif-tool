@@ -17,6 +17,7 @@ export default function App() {
   const [width, setWidth] = useState(640)
   const [speed, setSpeed] = useState(1)
   const [error, setError] = useState<string | null>(null)
+  const [filename, setFilename] = useState('recording')
   const [isDragging, setIsDragging] = useState(false)
   const [loadingMessage, setLoadingMessage] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -310,7 +311,17 @@ export default function App() {
                 <p className="tip">Tip: 10 fps + 640px is a good balance for Slack.</p>
 
                 <div className="button-col">
-                  <a className="btn-primary" href={gifURL} download="recording.gif">⬇ Download GIF</a>
+                  <div className="filename-row">
+                    <input
+                      className="filename-input"
+                      type="text"
+                      value={filename}
+                      onChange={(e) => setFilename(e.target.value.replace(/\.gif$/i, ''))}
+                      spellCheck={false}
+                    />
+                    <span className="filename-ext">.gif</span>
+                  </div>
+                  <a className="btn-primary" href={gifURL} download={`${filename || 'recording'}.gif`}>⬇ Download GIF</a>
                   <button className="btn-secondary btn-full" onClick={convert}>↺ Reconvert with new settings</button>
                   <button className="btn-ghost" onClick={reset}>← New file</button>
                 </div>
