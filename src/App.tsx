@@ -111,7 +111,7 @@ export default function App() {
       ])
 
       const data = await ffmpeg.readFile('output.gif')
-      const blob = new Blob([data as Uint8Array], { type: 'image/gif' })
+      const blob = new Blob([data instanceof Uint8Array ? data.slice() : data as string], { type: 'image/gif' })
       setGifURL(URL.createObjectURL(blob))
       setStage('done')
     } catch (err) {
