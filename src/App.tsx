@@ -20,7 +20,9 @@ export default function App() {
   const [filename, setFilename] = useState('recording')
   const [isDragging, setIsDragging] = useState(false)
   const [loadingMessage, setLoadingMessage] = useState('')
+  const [convertStage, setConvertStage] = useState<'loading-engine' | 'reading-file' | 'pass1' | 'pass2'>('loading-engine')
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const currentPassRef = useRef<1 | 2>(1)
 
   const LOADING_MESSAGES = [
     'Bit by bit, your GIF is taking shape...',
@@ -57,8 +59,12 @@ export default function App() {
     setVideoFile(file)
     setVideoURL(url)
     setGifURL(null)
-    setError(null)
     setStage('ready')
+    if (file.size > 150 * 1024 * 1024) {
+      setError(`Large file (${(file.size / 1024 / 1024).toFixed(0)}MB) — conversion will work but may take a few minutes. Try lower FPS or width to speed it up.`)
+    } else {
+      setError(null)
+    }
   }
 
   const onDrop = useCallback((e: React.DragEvent) => {
@@ -78,8 +84,10 @@ export default function App() {
     setStage('converting')
     setProgress(0)
     setError(null)
+    currentPassRef.current = 1
 
     try {
+      setConvertStage('loading-engine')
       if (!ffmpeg.loaded) {
         const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm'
         await ffmpeg.load({
@@ -88,22 +96,35 @@ export default function App() {
         })
       }
 
+      // Remove any previous listener to avoid stacking
+      ffmpeg.off('progress', () => {})
       ffmpeg.on('progress', ({ progress: p }) => {
-        setProgress(Math.round(p * 100))
+        const clamped = Math.min(1, Math.max(0, p))
+        if (currentPassRef.current === 1) {
+          setProgress(Math.round(clamped * 45))
+        } else {
+          setProgress(45 + Math.round(clamped * 55))
+        }
       })
 
+      setConvertStage('reading-file')
       const ext = videoFile.name.split('.').pop() || 'mp4'
       const inputName = `input.${ext}`
       await ffmpeg.writeFile(inputName, await fetchFile(videoFile))
 
       // Two-pass palette GIF for best quality / smallest size
       const speedFilter = speed !== 1 ? `setpts=PTS/${speed},` : ''
+
+      setConvertStage('pass1')
+      currentPassRef.current = 1
       await ffmpeg.exec([
         '-i', inputName,
         '-vf', `${speedFilter}fps=${fps},scale=${width}:-1:flags=lanczos,palettegen`,
         'palette.png',
       ])
 
+      setConvertStage('pass2')
+      currentPassRef.current = 2
       await ffmpeg.exec([
         '-i', inputName,
         '-i', 'palette.png',
@@ -238,7 +259,12 @@ export default function App() {
         {stage === 'converting' && (
           <div className="converting">
             <img src={`${import.meta.env.BASE_URL}chauncey.png`} alt="Chauncey" className="chauncey-spin" />
-            <p className="converting-label">{progress > 0 ? `${progress}%` : 'Loading engine...'}</p>
+            <p className="converting-label">
+              {convertStage === 'loading-engine' && 'Loading engine...'}
+              {convertStage === 'reading-file' && 'Reading file...'}
+              {convertStage === 'pass1' && `${progress}% — Generating palette`}
+              {convertStage === 'pass2' && `${progress}% — Encoding GIF`}
+            </p>
             <div className="progress-bar">
               <div className="progress-fill" style={{ width: `${progress}%` }} />
             </div>
