@@ -23,6 +23,7 @@ export default function App() {
   const [convertStage, setConvertStage] = useState<'loading-engine' | 'reading-file' | 'pass1' | 'pass2'>('loading-engine')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const currentPassRef = useRef<1 | 2>(1)
+  const progressHandlerRef = useRef<((e: { progress: number; time: number }) => void) | null>(null)
 
   const LOADING_MESSAGES = [
     'Bit by bit, your GIF is taking shape...',
@@ -96,16 +97,18 @@ export default function App() {
         })
       }
 
-      // Remove any previous listener to avoid stacking
-      ffmpeg.off('progress', () => {})
-      ffmpeg.on('progress', ({ progress: p }) => {
+      // Remove previous listener using stored ref so we don't stack on reconvert
+      if (progressHandlerRef.current) {
+        ffmpeg.off('progress', progressHandlerRef.current)
+      }
+      progressHandlerRef.current = ({ progress: p }) => {
         const clamped = Math.min(1, Math.max(0, p))
-        if (currentPassRef.current === 1) {
-          setProgress(Math.round(clamped * 45))
-        } else {
-          setProgress(45 + Math.round(clamped * 55))
-        }
-      })
+        const pct = currentPassRef.current === 1
+          ? Math.round(clamped * 45)
+          : 45 + Math.round(clamped * 55)
+        setProgress(Math.min(100, Math.max(0, pct)))
+      }
+      ffmpeg.on('progress', progressHandlerRef.current)
 
       setConvertStage('reading-file')
       const ext = videoFile.name.split('.').pop() || 'mp4'
