@@ -162,7 +162,7 @@ export default function App() {
             <span className="drop-icon">📁</span>
             <p className="drop-primary">Drop your screen recording here</p>
             <p className="drop-secondary">or click to browse · MP4, MOV supported</p>
-            <img src="/chauncey.png" alt="Chauncey" className="chauncey-float" />
+            <img src={`${import.meta.env.BASE_URL}chauncey.png`} alt="Chauncey" className="chauncey-float" />
           </div>
         )}
 
@@ -236,7 +236,7 @@ export default function App() {
 
         {stage === 'converting' && (
           <div className="converting">
-            <img src="/chauncey.png" alt="Chauncey" className="chauncey-spin" />
+            <img src={`${import.meta.env.BASE_URL}chauncey.png`} alt="Chauncey" className="chauncey-spin" />
             <p className="converting-label">{progress > 0 ? `${progress}%` : 'Loading engine...'}</p>
             <div className="progress-bar">
               <div className="progress-fill" style={{ width: `${progress}%` }} />
@@ -253,7 +253,7 @@ export default function App() {
                 <h2>Your GIF</h2>
                 <img src={gifURL} alt="Converted GIF" className="gif-preview" />
                 <div className="chauncey-done-wrap">
-                  <img src="/chauncey.png" alt="Chauncey" className="chauncey-pop" />
+                  <img src={`${import.meta.env.BASE_URL}chauncey.png`} alt="Chauncey" className="chauncey-pop" />
                   <p className="chauncey-done-msg">Looking good! 🎉</p>
                 </div>
               </div>
